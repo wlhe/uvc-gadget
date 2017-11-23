@@ -36,7 +36,7 @@
 #include <linux/usb/video.h>
 #include <linux/videodev2.h>
 
-#include "../drivers/usb/gadget/uvc.h"
+#include "uvc.h"
 
 #define clamp(val, min, max) ({                 \
         typeof(val) __val = (val);              \
