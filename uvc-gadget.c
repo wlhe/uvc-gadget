@@ -450,7 +450,7 @@ static int v4l2_process_data(struct v4l2_device *dev)
         return 0;
 
     if (dev->udev->first_buffer_queued)
-        if ((dev->dqbuf_count + 1) >= dev->qbuf_count)
+        if (dev->dqbuf_count >= dev->qbuf_count)
             return 0;
 
     /* Dequeue spent buffer rom V4L2 domain. */
@@ -470,7 +470,6 @@ static int v4l2_process_data(struct v4l2_device *dev)
 
     ret = ioctl(dev->v4l2_fd, VIDIOC_DQBUF, &vbuf);
     if (ret < 0) {
-        printf("V4L2: Unable to dequeue buffer: %s (%d).\n", strerror(errno), errno);
         return ret;
     }
 
@@ -504,7 +503,6 @@ static int v4l2_process_data(struct v4l2_device *dev)
 
     ret = ioctl(dev->udev->uvc_fd, VIDIOC_QBUF, &ubuf);
     if (ret < 0) {
-        printf("UVC: Unable to queue buffer %d: %s (%d).\n", ubuf.index, strerror(errno), errno);
         /* Check for a USB disconnect/shutdown event. */
         if (errno == ENODEV) {
             dev->udev->uvc_shutdown_requested = 1;
@@ -546,7 +544,6 @@ static int v4l2_get_format(struct v4l2_device *dev)
 
     ret = ioctl(dev->v4l2_fd, VIDIOC_G_FMT, &fmt);
     if (ret < 0) {
-        printf("V4L2: Unable to get format: %s (%d).\n", strerror(errno), errno);
         return ret;
     }
 
@@ -869,6 +866,7 @@ static int uvc_open(struct uvc_device **uvc, char *devname)
     return 0;
 
 err:
+    close(fd);
     return ret;
 }
 
@@ -934,10 +932,8 @@ static int uvc_video_process(struct uvc_device *dev)
     if (dev->run_standalone) {
         /* UVC stanalone setup. */
         ret = ioctl(dev->uvc_fd, VIDIOC_DQBUF, &ubuf);
-        if (ret < 0) {
-            printf("UVC: Unable to dequeue buffer: %s (%d).\n", strerror(errno), errno);
+        if (ret < 0)
             return ret;
-        }
 
         dev->dqbuf_count++;
 #ifdef ENABLE_BUFFER_DEBUG
@@ -946,10 +942,8 @@ static int uvc_video_process(struct uvc_device *dev)
         uvc_video_fill_buffer(dev, &ubuf);
 
         ret = ioctl(dev->uvc_fd, VIDIOC_QBUF, &ubuf);
-        if (ret < 0) {
-            printf("UVC: Unable to queue buffer: %s (%d).\n", strerror(errno), errno);
+        if (ret < 0)
             return ret;
-        }
 
         dev->qbuf_count++;
 
@@ -1017,10 +1011,8 @@ static int uvc_video_process(struct uvc_device *dev)
         vbuf.index = ubuf.index;
 
         ret = ioctl(dev->vdev->v4l2_fd, VIDIOC_QBUF, &vbuf);
-        if (ret < 0) {
-            printf("V4L2: Unable to queue buffer: %s (%d).\n", strerror(errno), errno);
+        if (ret < 0)
             return ret;
-        }
 
         dev->vdev->qbuf_count++;
 
@@ -1309,11 +1301,11 @@ static int uvc_handle_streamon_event(struct uvc_device *dev)
             ret = v4l2_reqbufs(dev->vdev, dev->vdev->nbufs);
             if (ret < 0)
                 goto err;
-
-            ret = v4l2_qbuf(dev->vdev);
-            if (ret < 0)
-                goto err;
         }
+
+        ret = v4l2_qbuf(dev->vdev);
+        if (ret < 0)
+            goto err;
 
         /* Start V4L2 capturing now. */
         ret = v4l2_start_capturing(dev->vdev);
@@ -1879,49 +1871,6 @@ static int uvc_events_process_data(struct uvc_device *dev, struct uvc_request_da
         dev->fcc = format->fcc;
         dev->width = frame->width;
         dev->height = frame->height;
-
-        /*
-         * Try to set the default format at the V4L2 video capture
-         * device as requested by the user.
-         */
-        CLEAR(fmt);
-
-        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        fmt.fmt.pix.field = V4L2_FIELD_ANY;
-        fmt.fmt.pix.width = frame->width;
-        fmt.fmt.pix.height = frame->height;
-        fmt.fmt.pix.pixelformat = format->fcc;
-
-        switch (format->fcc) {
-        case V4L2_PIX_FMT_YUYV:
-            fmt.fmt.pix.sizeimage = (fmt.fmt.pix.width * fmt.fmt.pix.height * 2);
-            break;
-        case V4L2_PIX_FMT_MJPEG:
-            fmt.fmt.pix.sizeimage = dev->imgsize;
-            break;
-        }
-
-        /*
-         * As per the new commit command received from the UVC host
-         * change the current format selection at both UVC and V4L2
-         * sides.
-         */
-        ret = uvc_video_set_format(dev);
-        if (ret < 0)
-            goto err;
-
-        if (!dev->run_standalone) {
-            /* UVC - V4L2 integrated path. */
-            ret = v4l2_set_format(dev->vdev, &fmt);
-            if (ret < 0)
-                goto err;
-        }
-
-        if (dev->bulk) {
-            ret = uvc_handle_streamon_event(dev);
-            if (ret < 0)
-                goto err;
-        }
     }
 
     return 0;
@@ -1977,8 +1926,6 @@ static void uvc_events_process(struct uvc_device *dev)
         if (!dev->run_standalone && dev->vdev->is_streaming) {
             /* UVC - V4L2 integrated path. */
             v4l2_stop_capturing(dev->vdev);
-            v4l2_uninit_device(dev->vdev);
-            v4l2_reqbufs(dev->vdev, 0);
             dev->vdev->is_streaming = 0;
         }
 
@@ -1988,6 +1935,7 @@ static void uvc_events_process(struct uvc_device *dev)
             uvc_uninit_device(dev);
             uvc_video_reqbufs(dev, 0);
             dev->is_streaming = 0;
+            dev->first_buffer_queued = 0;
         }
 
         return;
@@ -2322,7 +2270,6 @@ int main(int argc, char *argv[])
          * buffers queued.
          */
         v4l2_reqbufs(vdev, vdev->nbufs);
-        v4l2_qbuf(vdev);
     }
 
     if (mjpeg_image)

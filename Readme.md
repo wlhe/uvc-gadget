@@ -27,6 +27,8 @@ and Robert Baldyga's patchset
 
 ## Change log
 
+- Apply patchset [Bugfixes for UVC gadget test application](https://www.spinics.net/lists/linux-usb/msg99220.html)  
+
 - Apply patchset [UVC gadget test application enhancements](https://www.spinics.net/lists/linux-usb/msg84376.html)  
 
 - Add Readme/.gitignore and documentations  
