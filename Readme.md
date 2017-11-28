@@ -1,6 +1,13 @@
 ## uvc-gadget
 
-usb video class testing app
+UVC gadget userspace enhancement sample application
+
+Fork from  
+[uvc-gadget.git](http://git.ideasonboard.org/uvc-gadget.git)  
+Enhance with Bhupesh Sharma's patchset  
+[UVC gadget test application enhancements](https://www.spinics.net/lists/linux-usb/msg84376.html)  
+and Robert Baldyga's patchset  
+[Bugfixes for UVC gadget test application](https://www.spinics.net/lists/linux-usb/msg99220.html)  
 
 ## Build  
 
@@ -19,6 +26,8 @@ usb video class testing app
 - [more doc](https://github.com/torvalds/linux/tree/master/Documentation/usb)
 
 ## Change log
+
+- Apply patchset [UVC gadget test application enhancements](https://www.spinics.net/lists/linux-usb/msg84376.html)  
 
 - Add Readme/.gitignore and documentations  
   Copy linux-3.18.y/drivers/usb/gadget/function/uvc.h into repository, change include path for build
