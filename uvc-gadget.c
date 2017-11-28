@@ -1245,6 +1245,8 @@ static int uvc_video_reqbufs_userptr(struct uvc_device *dev, int nbufs)
             if (V4L2_PIX_FMT_MJPEG == dev->fcc)
                 memcpy(dev->dummy_buf[i].start, dev->imgdata, dev->imgsize);
         }
+
+        dev->mem = dev->dummy_buf;
     }
 
     return 0;
