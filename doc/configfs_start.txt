@@ -1,0 +1,167 @@
+The start of the configfs interface
+
+(The original post describing the first function
+made available through configfs can be seen here:
+http://www.spinics.net/lists/linux-usb/msg76388.html)
+
+##########################################################
+
+|# modprobe dummy_hcd num=2
+|# modprobe libcomposite
+
+|# lsmod
+|Module                  Size  Used by
+|libcomposite           31648  0
+|dummy_hcd              19871  0
+
+|# mkdir /sys/kernel/config/usb_gadget/oha
+|# cd /sys/kernel/config/usb_gadget/oha
+|# mkdir configs/def.1
+|# mkdir configs/def.2
+|# mkdir functions/acm.ttyS1
+|# mkdir strings/0x1
+|mkdir: cannot create directory `strings/0x1': Invalid argument
+|# mkdir strings/0x409
+|# mkdir strings/1033
+|mkdir: cannot create directory `strings/1033': File exists
+|# mkdir strings/1032
+|# mkdir configs/def.1/strings/0x409
+|# mkdir configs/def.2/strings/0x409
+
+|#find . -ls
+|   975    0 drwxr-xr-x   5 root     root            0 Dec 23 17:40 .
+|   978    0 drwxr-xr-x   4 root     root            0 Dec 23 17:43 ./strings
+|  4100    0 drwxr-xr-x   2 root     root            0 Dec 23 17:43 ./strings/1032
+|   995    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./strings/1032/serialnumber
+|   996    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./strings/1032/product
+|   997    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./strings/1032/manufacturer
+|  2002    0 drwxr-xr-x   2 root     root            0 Dec 23 17:41 ./strings/0x409
+|   998    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./strings/0x409/serialnumber
+|   999    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./strings/0x409/product
+|  1000    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./strings/0x409/manufacturer
+|   977    0 drwxr-xr-x   4 root     root            0 Dec 23 17:41 ./configs
+|  4081    0 drwxr-xr-x   3 root     root            0 Dec 23 17:41 ./configs/def.2
+|  4082    0 drwxr-xr-x   3 root     root            0 Dec 23 17:42 ./configs/def.2/strings
+|  2016    0 drwxr-xr-x   2 root     root            0 Dec 23 17:42 ./configs/def.2/strings/0x409
+|  1001    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./configs/def.2/strings/0x409/configuration
+|  1002    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./configs/def.2/bmAttributes
+|  1003    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./configs/def.2/MaxPower
+|   979    0 drwxr-xr-x   3 root     root            0 Dec 23 17:42 ./configs/def.1
+|   980    0 drwxr-xr-x   3 root     root            0 Dec 23 17:42 ./configs/def.1/strings
+|  5122    0 drwxr-xr-x   2 root     root            0 Dec 23 17:42 ./configs/def.1/strings/0x409
+|  1004    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./configs/def.1/strings/0x409/configuration
+|  1005    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./configs/def.1/bmAttributes
+|  1006    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./configs/def.1/MaxPower
+|   976    0 drwxr-xr-x   3 root     root            0 Dec 23 17:41 ./functions
+|   981    0 drwxr-xr-x   2 root     root            0 Dec 23 17:41 ./functions/acm.ttyS1
+|  1007    0 -r--r--r--   1 root     root         4096 Dec 23 17:43 ./functions/acm.ttyS1/port_num
+|  1008    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./UDC
+|  1009    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./bcdUSB
+|  1010    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./bcdDevice
+|  1011    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./idProduct
+|  1012    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./idVendor
+|  1013    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./bMaxPacketSize0
+|  1014    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./bDeviceProtocol
+|  1015    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./bDeviceSubClass
+|  1016    0 -rw-r--r--   1 root     root         4096 Dec 23 17:43 ./bDeviceClass
+
+|# cat functions/acm.ttyS1/port_num
+|0
+|# ls -lah /dev/ttyGS*
+|crw-rw---T 1 root dialout 252, 0 Dec 23 17:41 /dev/ttyGS0
+|
+|# echo 0x1234 > idProduct
+|# echo 0xabcd > idVendor
+|# echo 1122 > strings/0x409/serialnumber
+|# echo "The manufacturer" > strings/0x409/manufacturer
+|# echo 1 > strings/1032/manufacturer
+|# echo 1sa > strings/1032/product
+|# echo tada > strings/1032/serialnumber
+|echo "Primary configuration" > configs/def.1/strings/0x409/configuration
+|# echo "Secondary configuration" > configs/def.2/strings/0x409/configuration
+|# ln -s functions/acm.ttyS1 configs/def.1/
+|# ln -s functions/acm.ttyS1 configs/def.2/
+|find configs/def.1/ -ls
+|   979    0 drwxr-xr-x   3 root     root            0 Dec 23 17:49 configs/def.1/
+|  6264    0 lrwxrwxrwx   1 root     root            0 Dec 23 17:48 configs/def.1/acm.ttyS1 -> ../../../../usb_gadget/oha/functions/acm.ttyS1
+|   980    0 drwxr-xr-x   3 root     root            0 Dec 23 17:42 configs/def.1/strings
+|  5122    0 drwxr-xr-x   2 root     root            0 Dec 23 17:49 configs/def.1/strings/0x409
+|  6284    0 -rw-r--r--   1 root     root         4096 Dec 23 17:47 configs/def.1/strings/0x409/configuration
+|  6285    0 -rw-r--r--   1 root     root         4096 Dec 23 17:49 configs/def.1/bmAttributes
+|  6286    0 -rw-r--r--   1 root     root         4096 Dec 23 17:49 configs/def.1/MaxPower
+|
+|echo 120 > configs/def.1/MaxPower
+|
+|# ls -lh /sys/class/udc/
+|total 0
+|lrwxrwxrwx 1 root root 0 Dec 23 17:50 dummy_udc.0 -> ../../devices/platform/dummy_udc.0/udc/dummy_udc.0
+|lrwxrwxrwx 1 root root 0 Dec 23 17:50 dummy_udc.1 -> ../../devices/platform/dummy_udc.1/udc/dummy_udc.1
+|# echo dummy_udc.0 > UDC
+|# lsusb
+|Bus 001 Device 002: ID abcd:1234 Unknown
+|
+|lsusb -d abcd:1234 -v
+|Device Descriptor:
+…
+|  idVendor           0xabcd Unknown
+|  idProduct          0x1234
+|  bcdDevice            3.06
+|  iManufacturer           1 The manufacturer
+|  iProduct                2
+|  iSerial                 3 1122
+|  bNumConfigurations      2
+…
+|echo "" > UDC
+
+v5…v6
+- wired up strings with usb_gstrings_attach()
+- add UDC attribe. Write "udc-name" will bind the gadget. Write an empty
+  string (it should contain \n since 0 bytes write get optimzed away)
+  will unbind the UDC from the gadget. The name of available UDCs can be
+  obtained from /sys/class/udc/
+
+v4…v5
+- string rework. This will add a strings folder incl. language code like
+    strings/409/manufacturer
+  as suggested by Alan.
+- rebased ontop reworked functions.c which has usb_function_instance
+  which is used prior after "mkdir acm.instance" and can be directly
+  used for configuration via configfs.
+
+v3…v4
+ - moved functions from the root folde down to the gadget as suggested
+   by Michał
+ - configs have now their own configs folder as suggested by Michał.
+   The folder is still name.bConfigurationValue where name becomes the
+   sConfiguration. Is this usefull should we just stilc
+   configs/bConfigurationValue/ ?
+ - added configfs support to the ACM function. The port_num attribute is
+   exported by f_acm. An argument has been added to the USB alloc
+   function to distinguish between "old" (use facm_configure() to
+   configure and configfs interface (expose a config_node).
+   The port_num is currently a dumb counter. It will
+   require some function re-work to make it work.
+
+scheduled for v5:
+- sym linking function into config.
+
+v2…v3
+- replaced one ifndef by ifdef as suggested by Micahał
+- strstr()/strchr() function_make as suggested by Micahł
+- replace [iSerialNumber|iProduct|iManufacturer] with
+  [sSerialNumber|sProduct|sManufacturer] as suggested by Alan
+- added creation of config descriptors
+
+v1…v2
+- moved gadgets from configfs' root directory into /udcs/ within our
+  "usb_gadget" folder. Requested by Andrzej & Michał
+- use a dot as a delimiter between function's name and its instance's name
+  as suggested by Michał
+- renamed all config_item_type, configfs_group_operations, make_group,
+  drop_item as suggested by suggested by Andrzej to remain consisten
+  within this file and within other configfs users
+- Since configfs.c and functions.c are now part of the udc-core module,
+  the module itself is now called udc. Also added a tiny ifdef around
+  init code becuase udc-core is subsys init and this is too early for
+  configfs in the built-in case. In the module case, we can only have
+  one init function.
