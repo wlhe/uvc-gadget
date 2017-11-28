@@ -2078,7 +2078,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'f':
-            if (atoi(optarg) < 0 && atoi(optarg) > 1) {
+            if (atoi(optarg) < 0 || atoi(optarg) > 1) {
                 usage(argv[0]);
                 return 1;
             }
@@ -2095,7 +2095,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'm':
-            if (atoi(optarg) < 0 && atoi(optarg) > 2) {
+            if (atoi(optarg) < 0 || atoi(optarg) > 2) {
                 usage(argv[0]);
                 return 1;
             }
@@ -2105,7 +2105,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'n':
-            if (atoi(optarg) < 2 && atoi(optarg) > 32) {
+            if (atoi(optarg) < 2 || atoi(optarg) > 32) {
                 usage(argv[0]);
                 return 1;
             }
@@ -2115,7 +2115,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'o':
-            if (atoi(optarg) < 0 && atoi(optarg) > 1) {
+            if (atoi(optarg) < 0 || atoi(optarg) > 1) {
                 usage(argv[0]);
                 return 1;
             }
@@ -2125,7 +2125,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'r':
-            if (atoi(optarg) < 0 && atoi(optarg) > 1) {
+            if (atoi(optarg) < 0 || atoi(optarg) > 1) {
                 usage(argv[0]);
                 return 1;
             }
@@ -2134,7 +2134,7 @@ int main(int argc, char *argv[])
             break;
 
         case 's':
-            if (atoi(optarg) < 0 && atoi(optarg) > 2) {
+            if (atoi(optarg) < 0 || atoi(optarg) > 2) {
                 usage(argv[0]);
                 return 1;
             }
@@ -2143,7 +2143,7 @@ int main(int argc, char *argv[])
             break;
 
         case 't':
-            if (atoi(optarg) < 0 && atoi(optarg) > 15) {
+            if (atoi(optarg) < 0 || atoi(optarg) > 15) {
                 usage(argv[0]);
                 return 1;
             }
