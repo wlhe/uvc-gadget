@@ -1432,6 +1432,23 @@ static void uvc_events_process_control(
          * support only auto exposure.
          */
         case UVC_CT_AE_MODE_CONTROL:
+        /**********************************************************/
+        case UVC_CT_AE_PRIORITY_CONTROL:
+        case UVC_CT_EXPOSURE_TIME_ABSOLUTE_CONTROL:
+        case UVC_CT_EXPOSURE_TIME_RELATIVE_CONTROL:
+        case UVC_CT_FOCUS_ABSOLUTE_CONTROL:
+        case UVC_CT_FOCUS_RELATIVE_CONTROL:
+        case UVC_CT_FOCUS_AUTO_CONTROL:
+        case UVC_CT_IRIS_ABSOLUTE_CONTROL:
+        case UVC_CT_IRIS_RELATIVE_CONTROL:
+        case UVC_CT_ZOOM_ABSOLUTE_CONTROL:
+        case UVC_CT_ZOOM_RELATIVE_CONTROL:
+        case UVC_CT_PANTILT_ABSOLUTE_CONTROL:
+        case UVC_CT_PANTILT_RELATIVE_CONTROL:
+        case UVC_CT_ROLL_ABSOLUTE_CONTROL:
+        case UVC_CT_ROLL_RELATIVE_CONTROL:
+        case UVC_CT_PRIVACY_CONTROL:
+        /**********************************************************/
             switch (req) {
             case UVC_SET_CUR:
                 /* Incase of auto exposure, attempts to
@@ -1481,6 +1498,16 @@ static void uvc_events_process_control(
                 dev->request_error_code.data[0] = 0x00;
                 dev->request_error_code.length = 1;
                 break;
+            /**********************************************************/
+            case UVC_GET_MIN:
+            case UVC_GET_MAX:
+                resp->data[0] = 0x02;
+                resp->length = 1;
+                dev->request_error_code.data[0] = 0x00;
+                dev->request_error_code.length = 1;
+                break;
+            /**********************************************************/
+
             default:
                 /*
                  * We don't support this control, so STALL the
@@ -2066,7 +2093,8 @@ int main(int argc, char *argv[])
     /* USB speed related params */
     int mult = 0;
     int burst = 0;
-    enum usb_device_speed speed = USB_SPEED_SUPER; /* High-Speed */
+    // enum usb_device_speed speed = USB_SPEED_SUPER; /* High-Speed */
+    enum usb_device_speed speed = USB_SPEED_HIGH; /* High-Speed */
     enum io_method uvc_io_method = IO_METHOD_USERPTR;
 
     while ((opt = getopt(argc, argv, "bdf:hi:m:n:o:r:s:t:u:v:")) != -1) {
