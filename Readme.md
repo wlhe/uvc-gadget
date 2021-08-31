@@ -1,8 +1,8 @@
+**Upstream Latest Version: http://git.ideasonboard.org/uvc-gadget.git**
+
 ## uvc-gadget
 
 **Upstream project [uvc-gadget](http://git.ideasonboard.org/uvc-gadget.git) has been updated and continuous maintenance**
-
-**Please refer to http://git.ideasonboard.org/uvc-gadget.git**
 
 UVC gadget userspace enhancement sample application
 
